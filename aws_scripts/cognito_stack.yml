@@ -1,0 +1,219 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS Cognito for vehicle demo app
+
+######################Parameters#########################
+# Parameters are used to receive input from the user for 
+# various dynamic attributes in the script. For example
+# in this script the user is able to specify the name for
+# the cognito domain, userpool and identity pool.
+# It functions as inputs for the script
+Parameters:
+  CognitoDomainName:
+    Type: String
+    Default: 'vehicle-demo-project'
+    Description: "Name for the cognito domain"
+  CognitoPoolAndIdentityName:
+    Type: String
+    Default: 'vehicle_demo_project'
+    Description: "Name for the user pool and identity pool"
+
+#######################Resource##########################
+# The following section is used to create an aws resource as
+# seen with the resource tag. The various sub tags following this
+# such as "CognitoAuthenticatedRole" and "CognitoUserPool" specifies 
+# cloudformation logical ids for the resources. The type tag 
+# specifies the type of resources being 
+# created. In this case IAM Roles and a userpool is some
+# of the resources
+Resources:
+
+############COGNITO-IDENTITY-POOL-ROLES################
+# In the following section roles are created which
+# specify the resources that a user can access when 
+# the are authenticated and when they are not authenticated
+  CognitoAuthenticatedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              # This specifies the services that have access to 
+              # the policies defined below.
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: Cognito_Authenticated_Role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                - "cognito-sync:*"
+                - "cognito-identity:*"
+                Resource: '*'
+  CognitoUnauthenticatedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: Cognito_Unauthenticated_Role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                - "cognito-sync:*"
+                Resource: '*'
+
+##############COGNITO-USERPOOL################
+# The following section is where the actual 
+# userpool is created. Here we specify the name
+# of the pool as well as the password policy.
+# We also specify the attributes to use as the username,
+# whether it is case sensitive and whether it is required.
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref CognitoPoolAndIdentityName
+      AutoVerifiedAttributes:
+        - email
+      VerificationMessageTemplate: 
+        DefaultEmailOption: CONFIRM_WITH_LINK
+      AccountRecoverySetting: 
+        RecoveryMechanisms: 
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      UsernameAttributes:
+        - email
+      UsernameConfiguration: 
+        CaseSensitive: true
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Mutable: true
+
+##############COGNITO-USERPOOL-CLIENT################
+# The following section is used to create the userpool
+# app client. Here you specify the app client name
+# and whether it should generate a secret key.
+# YOu can also specify the callback urls and the OAuth
+# flows and scopes
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Ref CognitoPoolAndIdentityName
+      GenerateSecret: false
+      CallbackURLs: 
+        - 'myapp://'
+      LogoutURLs: 
+        - 'myapp://'
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: 
+        - 'implicit'
+      AllowedOAuthScopes: 
+        - 'email'
+        - 'openid'
+        - 'profile'
+        - 'aws.cognito.signin.user.admin'
+      SupportedIdentityProviders: 
+        - 'COGNITO'
+        - 'Google'
+
+##############COGNITO-USERPOOL-DOMAIN################
+# This section is where we create a domain for the user pool
+  UserPoolDomain: 
+    Type: AWS::Cognito::UserPoolDomain 
+    Properties:
+      UserPoolId: !Ref CognitoUserPool 
+      Domain: !Ref CognitoDomainName 
+
+##############GOOGLE-IDENTITY-PROVIDER################
+
+  CognitoGoogleIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties: 
+      ProviderName: Google
+      AttributeMapping:
+        email: email
+      ProviderDetails:
+        client_id: <Value>
+        client_secret: <Value>
+        authorize_scopes: profile email openid
+      ProviderType: Google
+      UserPoolId: !Ref CognitoUserPool
+
+###########################GROUPS#########################
+# This section is where we create the various groups 
+# for the user pool
+  CognitoAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties: 
+      Description: 'Admin'
+      GroupName: 'Admin'
+      UserPoolId: !Ref CognitoUserPool
+
+  CognitoUserGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties: 
+      Description: 'User group'
+      GroupName: 'User'
+      UserPoolId: !Ref CognitoUserPool
+
+######################IDENTITY-POOL######################
+# In this section we create the identity pool for the userpool
+# and we also attach the roles for authenticated and unauthenticated users
+  CognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties: 
+      AllowUnauthenticatedIdentities: false
+      IdentityPoolName: !Ref CognitoPoolAndIdentityName
+
+  IdentityPoolRoleAttachment: 
+    Type: AWS::Cognito::IdentityPoolRoleAttachment 
+    Properties: 
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles: 
+        "authenticated": !GetAtt CognitoAuthenticatedRole.Arn 
+        "unauthenticated": !GetAtt CognitoUnauthenticatedRole.Arn 
+
+###########################SSM###########################
+  CognitoUserPoolId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Vehicle_Demo_Cognito_User_Pool_Id
+      Type: String
+      Value: !Ref CognitoUserPool
+      Description: Vehicle demo user pool id
+
+###########################OUTPUT#########################
+# In this section we export the User pool id which we import in 
+# other stacks
+Outputs:
+  CognitoUserPoolID:
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: CognitoUserPoolID

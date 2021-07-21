@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template creates Codebuild resources for a simple SAM Application
+# comment
+Parameters:
+  GithubRepositoryURL:
+    Type: String
+    Description: 'The projects Github repository url'
+  GithubBranch:
+    Type: String
+    Default: 'master'
+    Description: 'Github branch to rerun build on push event'
+
+Resources:
+  SamCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !ImportValue ProjectName
+      Description: Build process for a simple serverless application deployed using AWS SAM
+      ServiceRole: !ImportValue CodeBuildIAMRoleARN
+      Artifacts:
+        Type: S3
+        Location: !ImportValue ArtifactsBucketName
+        Name: !Join
+          - ""
+          - - !ImportValue ProjectName
+            - "-build-artifacts"
+        Path: ''
+        NamespaceType: NONE
+        Packaging: NONE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0
+        EnvironmentVariables: 
+          - Value: !ImportValue ArtifactsBucketName
+            Name: ArtifactsBucketName  
+      Source:
+        Location: !Ref GithubRepositoryURL
+        Type: GITHUB
+        GitCloneDepth: 1
+        BuildSpec: aws_scripts/buildspec.yaml
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: !Sub ^refs/heads/${GithubBranch}
+      BadgeEnabled: false
+      LogsConfig:
+        CloudWatchLogs: 
+          Status: ENABLED
+        S3Logs:
+          Status: DISABLED
+          EncryptionDisabled: false
+      TimeoutInMinutes: 10

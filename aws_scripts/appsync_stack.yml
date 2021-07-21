@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Appsync
+
+Resources:
+  AppSyncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "appsync-role-${AWS::Region}"
+      Description: Provides appsync with permissions
+      #Provide appsync permission to assume this role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - appsync.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/service-role/"
+      Policies:
+        - PolicyName: !Sub "appsync-dynamo-policy-${AWS::Region}"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !ImportValue <Value>
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:UpdateItem
+        - PolicyName: !Sub "appsync-lambda-policy-${AWS::Region}"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:<Value>"
+                Action:
+                  - lambda:InvokeFunction
+
+########################APPSYNC-API#############################
+# The following is used to create appsync.
+# It specifies to use Cognito as authentication
+# It specifies the name for appsync and connects
+# appsync to the cognito userpool
+  AppSyncApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      Name: <Value>
+      UserPoolConfig: 
+        AwsRegion: !Ref "AWS::Region"
+        DefaultAction: ALLOW
+        UserPoolId: <Value>
+
+########################APPSYNC-SCHEMA#############################
+# The following section links a graphql schema to Appsync
+  AppSyncSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties: 
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DefinitionS3Location: "./appsync_schema/schema.graphql"
+
+######################APPSYNC-DATASOURCE###########################
+# The follow section specifies all the places where
+# appsync get route its requests to. Resolvers are use to link
+# a request with a source of data. Datasources specify where the
+# data can be found
+# Resolvers use these data sources to fetch data when clients make GraphQL calls.
+
+  DynamoDBDatasource:
+    Type: AWS::AppSync::DataSource
+    Properties: 
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Description: Datasource for user dynamo table
+      DynamoDBConfig: 
+        AwsRegion: !Ref "AWS::Region"
+        TableName: <Value>
+      Name: <Value>
+      ServiceRoleArn: !GetAtt AppSyncRole.Arn
+      Type: AMAZON_DYNAMODB
+
+  LambdaDatasource:
+    Type: AWS::AppSync::DataSource
+    Properties: 
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Description: Datasource for retrieving user details
+      LambdaConfig:
+        LambdaFunctionArn: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:<Value>"
+      Name: GetUserDetails
+      ServiceRoleArn: !GetAtt AppSyncRole.Arn
+      Type: AWS_LAMBDA
+
+
+########################APPSYNC-RESOLVER###########################
+# In the following section we use resolvers to link mutations and/or 
+# queries to datasources
+#comment
+  GetUserDetailsResolver:
+    Type: AWS::AppSync::Resolver
+    Properties: 
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DataSourceName: !GetAtt GetUserDetailsLambdaDatasource.Name
+      FieldName: getUserDetails
+      TypeName: Query #or Mutation
+      # RequestMappingTemplateS3Location: "./appsync_resolvers/get_item.txt"
+      # ResponseMappingTemplateS3Location: "./appsync_resolvers/default_response.txt"
+
+  GetVehicleDetailsResolver:
+    Type: AWS::AppSync::Resolver
+    Properties: 
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DataSourceName: !GetAtt GetVehiclesLambdaDatasource.Name
+      FieldName: getVehicleDetails
+      TypeName: Query

@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template creates artifacts bucket
+#comment
+######################Parameters#########################
+# Parameters are used to receive input from the user for 
+# various dynamic attributes in the script. For example
+# in this script the user is able to specify the name for
+# the artifacts bucket, which will house all the lambdas
+Parameters:
+  ProjectName:
+    Type: String
+    Default: 'al-internal-system'
+    Description: 'Project name for deployments (no spaces) use - or _'
+  ArtifactsBucketName:
+    Type: String
+    Default: 'vehicle-demo-artifacts-stack'
+    Description: 'Name of the S3 bucket for build artifacts'
+
+#######################Resource##########################
+# The following section is used to create an aws resource as
+# seen with the resource tag. The tag following this called 
+# "ArtifactsBucket" specifies a cloudformation logical id for the 
+# resource. The type tag specifies the type of resource being 
+# created in this case an s3 bucket. The tag "!Ref" is used
+# to obtain the name specified in the Parameters section.
+Resources:
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ArtifactsBucketName
+
+#######################Output##########################
+# The Outputs sections is used to export properties when creating
+# resources, for example the arn of an IAM role or lambda.
+# In this case we are exporting the name of the s3 bucket
+# and project. The exported
+# values can then be imported in other scripts.
+Outputs:
+  ArtifactsBucketName:
+    Value: !Ref ArtifactsBucket
+    Export:
+      Name: ArtifactsBucketName
+  ProjectName:
+    Value: !Ref ProjectName
+    Export:
+      Name: ProjectName

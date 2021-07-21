@@ -1,0 +1,3 @@
+requests
+dynamo_json
+pytest

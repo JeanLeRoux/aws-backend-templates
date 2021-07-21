@@ -1,0 +1,35 @@
+﻿type Mutation {
+	updateUserDetails(
+		firstname: String,
+		lastname: String,
+		contact: inputContactDetails,
+	): userDetails
+}
+
+type Query {
+	getUserDetails: userDetails
+}
+
+type contactDetails {
+	phoneNumber: String
+	telephoneNumber: String
+	email: String
+}
+
+input inputContactDetails {
+	phoneNumber: String
+	telephoneNumber: String
+	email: String
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+}
+
+type userDetails {
+	id: String
+	firstname: String
+	lastname: String
+	contact: contactDetails
+}

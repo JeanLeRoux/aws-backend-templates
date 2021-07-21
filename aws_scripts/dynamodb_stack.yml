@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template creates dynamodb table
+
+Parameters:
+  UserTableName:
+    Type: String
+    Default: "vehicle-demo-user-data"
+    Description: 'User tablename'
+  VehicleTableName:
+    Type: String
+    Default: "vehicle-demo-vehicle-data"
+    Description: 'Vehicle tablename'
+  # RoadsideAssistanceTableName:
+  #   Type: String
+  #   Default: "vehicle-demo-roadside-assistance-data"
+  #   Description: 'Roadside Assistance tablename'
+  # EmergencyServiceTableName:
+  #   Type: String
+  #   Default: "vehicle-demo-emergency-service-data"
+  #   Description: 'Emergency Service tablename'
+
+Resources:
+  UserDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+    # A list of attributes that describe the key schema for the table and indexes.
+    # This property is required to create a DynamoDB table.
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+        # - AttributeName: sk
+        #   AttributeType: S
+    # Specifies the attributes that make up the primary key for the table. 
+    # The attributes in the KeySchema property must also be defined in the AttributeDefinitions property.
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+        # - AttributeName: sk
+        #   KeyType: RANGE
+    # Throughput for the specified table, which consists of values for ReadCapacityUnits and WriteCapacityUnits
+    # If you set BillingMode as PROVISIONED, you must specify this property. 
+    # If you set BillingMode as PAY_PER_REQUEST, you cannot specify this property.
+    # If If you set BillingMode is not in the script, you must specify this property
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+    # A name for the table. If you don't specify a name, AWS CloudFormation generates 
+    # a unique physical ID and uses that ID for the table name.
+      TableName: !Ref UserTableName
+
+  VehicleDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+    # A list of attributes that describe the key schema for the table and indexes.
+    # This property is required to create a DynamoDB table.
+      AttributeDefinitions: 
+        - AttributeName: model_id
+          AttributeType: S
+    # Specifies the attributes that make up the primary key for the table. 
+    # The attributes in the KeySchema property must also be defined in the AttributeDefinitions property.
+      KeySchema: 
+        - AttributeName: model_id
+          KeyType: HASH
+    # Throughput for the specified table, which consists of values for ReadCapacityUnits and WriteCapacityUnits
+    # If you set BillingMode as PROVISIONED, you must specify this property. 
+    # If you set BillingMode as PAY_PER_REQUEST, you cannot specify this property.
+    # If If you set BillingMode is not in the script, you must specify this property
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+    # A name for the table. If you don't specify a name, AWS CloudFormation generates 
+    # a unique physical ID and uses that ID for the table name.
+      TableName: !Ref VehicleTableName
+
+# Exports
+Outputs:
+  UserDynamoTableArn:
+    Value: !GetAtt  UserDynamoDBTable.Arn
+    Export:
+      Name: UserDynamoTableArn
+  VehicleDynamoTableArn:
+    Value: !GetAtt  VehicleDynamoDBTable.Arn
+    Export:
+      Name: VehicleDynamoTableArn
+  UserDynamoTableName:
+    Value: !Ref UserTableName
+    Export:
+      Name: UserDynamoTableName
+  VehicleDynamoTableName:
+    Value: !Ref VehicleTableName
+    Export:
+      Name: VehicleDynamoTableName
