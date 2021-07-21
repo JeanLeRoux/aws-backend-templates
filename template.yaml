@@ -25,10 +25,10 @@ Resources:
 # In this section we create the roles for our various lambdas. The Basic role
 # only attaches the lambda basic execution role which gives our lambdas
 # access to cloudformation
-  CognitoLambdaRole:
+  BasicLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "vehicle-demo-cognito-lambda-role-${AWS::Region}"
+      RoleName: !Sub "basic-lambda-role-${AWS::Region}"
       Description: Provides lambdas with permissions
       #Provide Codebuild permission to assume this role
       AssumeRolePolicyDocument:
@@ -43,180 +43,12 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: "/service-role/"
-
-  UserDatabaseLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "vehicle-demo-user-lambda-role-${AWS::Region}"
-      Description: Provides lambdas with permissions
-      #Provide Codebuild permission to assume this role
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Path: "/service-role/"
-
-  VehicleDatabaseLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "vehicle-demo-vehicle-lambda-role-${AWS::Region}"
-      Description: Provides lambdas with permissions
-      #Provide Codebuild permission to assume this role
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Path: "/service-role/"
-
-  SSMPolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "ssm-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - "*"
-            Action:
-              - ssm:DeleteParameter
-              - ssm:PutParameter
-              - ssm:GetParameter
-              - ssm:GetParameters
-      Roles:
-        - !Ref CognitoLambdaRole
-
-  S3Policy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "s3-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - "*"
-            Action:
-              - s3:GetObject
-      Roles:
-        - !Ref UserDatabaseLambdaRole
-
-  CognitoPolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "cognito-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - !Join
-                - ""
-                - - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/"
-                  - !ImportValue CognitoUserPoolID
-            Action:
-              - cognito-idp:AdminGetUser
-              - cognito-idp:ListUsers
-      Roles:
-        - !Ref CognitoLambdaRole
-
-  UserDatabasePolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "user-database-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - !ImportValue UserDynamoTableArn
-              - !ImportValue VehicleDynamoTableArn
-            Action:
-              - dynamodb:PutItem
-              - dynamodb:BatchGetItem
-              - dynamodb:BatchWriteItem
-              - dynamodb:DeleteItem
-              - dynamodb:GetItem
-              - dynamodb:Query
-              - dynamodb:Scan
-              - dynamodb:UpdateItem
-      Roles:
-        - !Ref UserDatabaseLambdaRole
-
-  AllVehicleDatabasePolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "vehicle-major-database-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - !ImportValue VehicleDynamoTableArn
-            Action:
-              - dynamodb:PutItem
-              - dynamodb:BatchGetItem
-              - dynamodb:BatchWriteItem
-              - dynamodb:DeleteItem
-              - dynamodb:GetItem
-              - dynamodb:Query
-              - dynamodb:Scan
-              - dynamodb:UpdateItem
-      Roles:
-        - !Ref VehicleDatabaseLambdaRole
-
-  MinorVehicleDatabasePolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "vehicle-minor-database-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - !ImportValue UserDynamoTableArn
-              - !ImportValue VehicleDynamoTableArn
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Query
-              - dynamodb:Scan
-      Roles:
-        - !Ref UserDatabaseLambdaRole
-
-  UserLambdasAccessPolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: !Sub "user-lambda-policy-${AWS::Region}"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_user_details"
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get_user_email"
-            Action:
-              - lambda:InvokeFunction
-      Roles:
-        - !Ref UserDatabaseLambdaRole
+  
 #############################LAMBDA-LAYER###################################
   LambdaLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: vehicle-demo-lambda-layer
+      LayerName: lambda-layer
       Description: Dependencies for lambdas
       ContentUri: layers
       LicenseInfo: 'MIT'
@@ -229,51 +61,10 @@ Resources:
 #############################LAMBDAS###################################
 # In the following section we create our lambdas and specify where to find
 # the code for the lambda using the CodeUri property
-  UpdateUserDetailsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: scripts/update_user_details/
-      FunctionName: update_user_details
-      Role: !GetAtt UserDatabaseLambdaRole.Arn
-
-  UpdateVehicleDetailsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: scripts/update_vehicle_details/
-      FunctionName: update_vehicle_details
-      Role: !GetAtt UserDatabaseLambdaRole.Arn
-
-  UpdateVehicleModelsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: scripts/update_vehicle_models/
-      FunctionName: update_vehicle_models
-      Role: !GetAtt VehicleDatabaseLambdaRole.Arn
 
   GetUserDetailsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: scripts/get_user_details/
       FunctionName: get_user_details
-      Role: !GetAtt UserDatabaseLambdaRole.Arn
-
-  GetVehicleDetailsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: scripts/get_vehicle_details/
-      FunctionName: get_vehicle_details
-      Role: !GetAtt UserDatabaseLambdaRole.Arn
-
-  GetUserEmailFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: scripts/get_user_email/
-      FunctionName: get_user_email
-      Role: !GetAtt CognitoLambdaRole.Arn
-
-  GetVehicleModelsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: scripts/get_vehicle_models/
-      FunctionName: get_vehicle_models
-      Role: !GetAtt VehicleDatabaseLambdaRole.Arn
+      Role: !GetAtt BasicLambdaRole.Arn

@@ -9,11 +9,11 @@ Description: Template creates artifacts bucket
 Parameters:
   ProjectName:
     Type: String
-    Default: 'al-internal-system'
+    Default: '<value>'
     Description: 'Project name for deployments (no spaces) use - or _'
   ArtifactsBucketName:
     Type: String
-    Default: 'vehicle-demo-artifacts-stack'
+    Default: '<value>'
     Description: 'Name of the S3 bucket for build artifacts'
 
 #######################Resource##########################

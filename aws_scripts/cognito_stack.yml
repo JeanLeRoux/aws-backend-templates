@@ -10,11 +10,11 @@ Description: AWS Cognito for vehicle demo app
 Parameters:
   CognitoDomainName:
     Type: String
-    Default: 'vehicle-demo-project'
+    Default: '<value>'
     Description: "Name for the cognito domain"
   CognitoPoolAndIdentityName:
     Type: String
-    Default: 'vehicle_demo_project'
+    Default: '<value>'
     Description: "Name for the user pool and identity pool"
 
 #######################Resource##########################
@@ -204,10 +204,10 @@ Resources:
   CognitoUserPoolId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: Vehicle_Demo_Cognito_User_Pool_Id
+      Name: CognitoUserPoolID
       Type: String
       Value: !Ref CognitoUserPool
-      Description: Vehicle demo user pool id
+      Description: CognitoUserPoolID
 
 ###########################OUTPUT#########################
 # In this section we export the User pool id which we import in 

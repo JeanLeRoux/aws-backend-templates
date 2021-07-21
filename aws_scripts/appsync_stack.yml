@@ -92,7 +92,7 @@ Resources:
     Type: AWS::AppSync::DataSource
     Properties: 
       ApiId: !GetAtt AppSyncApi.ApiId
-      Description: Datasource for retrieving user details
+      Description: Description
       LambdaConfig:
         LambdaFunctionArn: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:<Value>"
       Name: GetUserDetails
@@ -108,7 +108,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties: 
       ApiId: !GetAtt AppSyncApi.ApiId
-      DataSourceName: !GetAtt GetUserDetailsLambdaDatasource.Name
+      DataSourceName: !GetAtt DynamoDBDatasource.Name
       FieldName: getUserDetails
       TypeName: Query #or Mutation
       # RequestMappingTemplateS3Location: "./appsync_resolvers/get_item.txt"
@@ -118,6 +118,6 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties: 
       ApiId: !GetAtt AppSyncApi.ApiId
-      DataSourceName: !GetAtt GetVehiclesLambdaDatasource.Name
+      DataSourceName: !GetAtt LambdaDatasource.Name
       FieldName: getVehicleDetails
       TypeName: Query
