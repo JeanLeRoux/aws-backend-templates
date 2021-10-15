@@ -44,8 +44,8 @@ Outputs:
   ArtifactsBucketName:
     Value: !Ref ArtifactsBucket
     Export:
-      Name: ArtifactsBucketName
+      Name: ArtifactBucketName
   ProjectName:
     Value: !Ref ProjectName
     Export:
-      Name: ProjectName
+      Name: ProjectNames
