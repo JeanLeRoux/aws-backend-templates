@@ -62,11 +62,11 @@ Resources:
                   - !Join 
                     - "" 
                     - - "arn:aws:s3:::"
-                      - !ImportValue ArtifactsBucketName
+                      - !ImportValue ArtifactBucketName
                   - !Join 
                     - ""
                     - - "arn:aws:s3:::"
-                      - !ImportValue ArtifactsBucketName
+                      - !ImportValue ArtifactBucketName
                       - "/*"
                 Action:
                   - s3:PutObject
@@ -151,4 +151,4 @@ Outputs:
   CodeBuildIAMRoleARN:
     Value: !GetAtt CodeBuildIAMRole.Arn
     Export:
-      Name: CodeBuildIAMRoleARN
+      Name: CodeBuildIAMRoleARNs

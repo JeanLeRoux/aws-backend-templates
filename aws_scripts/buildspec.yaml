@@ -10,9 +10,9 @@ phases:
     commands:
       # Lambdas
       - sam build
-      - sam deploy --stack-name vehicle-demo-lambda-stack --s3-bucket $ArtifactsBucketName --capabilities CAPABILITY_NAMED_IAM
+      - sam deploy --stack-name vehicle-demo-lambda-stack --s3-bucket $ArtifactBucketName --capabilities CAPABILITY_NAMED_IAM
   post_build:
     commands:
       # AppSync sam build commands
-      - sam package --template-file aws_scripts/appsync_stack.yml --s3-bucket $ArtifactsBucketName --output-template-file packaged.yaml
+      - sam package --template-file aws_scripts/appsync_stack.yml --s3-bucket $ArtifactBucketName --output-template-file packaged.yaml
       - sam deploy --template-file packaged.yaml --stack-name vehicle-demo-appsync-stack --capabilities CAPABILITY_NAMED_IAM

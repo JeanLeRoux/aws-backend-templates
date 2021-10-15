@@ -16,10 +16,10 @@ Resources:
     Properties:
       Name: !ImportValue ProjectName
       Description: Build process for a simple serverless application deployed using AWS SAM
-      ServiceRole: !ImportValue CodeBuildIAMRoleARN
+      ServiceRole: !ImportValue CodeBuildIAMRoleARNs
       Artifacts:
         Type: S3
-        Location: !ImportValue ArtifactsBucketName
+        Location: !ImportValue ArtifactBucketName
         Name: !Join
           - ""
           - - !ImportValue ProjectName
@@ -32,8 +32,8 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0
         EnvironmentVariables: 
-          - Value: !ImportValue ArtifactsBucketName
-            Name: ArtifactsBucketName  
+          - Value: !ImportValue ArtifactBucketName
+            Name: ArtifactBucketName  
       Source:
         Location: !Ref GithubRepositoryURL
         Type: GITHUB
