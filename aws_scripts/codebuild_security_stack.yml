@@ -38,16 +38,16 @@ Resources:
                     - - "arn:aws:logs:eu-west-1:"
                       - !Ref "AWS::AccountId"
                       - ":log-group:/aws/codebuild/"
-                      - !ImportValue ProjectName
+                      - !ImportValue ProjectNames
                   - !Join
                     - ""
                     - - "arn:aws:logs:eu-west-1:"
                       - !Ref "AWS::AccountId"
                       - ":log-group:/aws/codebuild/"
-                      - !ImportValue ProjectName
+                      - !ImportValue ProjectNames
                       - ":*"
-                  # - !Sub "arn:aws:logs:eu-west-1:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}"
-                  # - !Sub "arn:aws:logs:eu-west-1:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}:*"
+                  # - !Sub "arn:aws:logs:eu-west-1:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectNames}"
+                  # - !Sub "arn:aws:logs:eu-west-1:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectNames}:*"
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
@@ -87,9 +87,9 @@ Resources:
                       - ":"
                       - !Ref "AWS::AccountId"
                       - ":report-group/"
-                      - !ImportValue ProjectName
+                      - !ImportValue ProjectNames
                       - "-*"
-                  # - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${ProjectName}-*"
+                  # - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${ProjectNames}-*"
                 Action:
                   - codebuild:CreateReportGroup
                   - codebuild:CreateReport
