@@ -21,6 +21,15 @@ Globals:
 
 #############################RESOURCES###################################
 Resources:
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'" # TODO: update to specific (localhost/domain)
+
 #############################LAMBDA-IAM-ROLES###################################
 # In this section we create the roles for our various lambdas. The Basic role
 # only attaches the lambda basic execution role which gives our lambdas
@@ -68,3 +77,11 @@ Resources:
       CodeUri: scripts/get_user_details/
       FunctionName: get_user_details
       Role: !GetAtt BasicLambdaRole.Arn
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /attachments
+            Method: post
+            RestApiId:
+              Ref: ApiGatewayApi
